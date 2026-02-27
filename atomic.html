@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AstraLab | Atomic Structure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --theme-color: #00ff00; }
+        body { background: #050000; color: white; font-family: 'Courier New', monospace; overflow: hidden; }
+        .cyber-panel { background: rgba(10,30,10,0.8); border: 1px solid var(--theme-color); }
+        input[type=range] { -webkit-appearance: none; width: 100%; background: #003300; height: 2px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; background: var(--theme-color); cursor: pointer; border-radius: 50%; box-shadow: 0 0 10px var(--theme-color); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="h-screen flex flex-col p-4">
+
+    <div id="safetyModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm transition-opacity duration-500">
+        <div class="cyber-panel p-8 max-w-md w-full text-center relative shadow-[0_0_30px_var(--theme-color)]">
+            <h2 class="text-2xl font-black text-[var(--theme-color)] mb-4 tracking-widest uppercase" id="ui-safe-title">Safety Protocol</h2>
+            <div class="text-sm text-gray-300 mb-8 leading-relaxed" id="ui-safe-body"></div>
+            <button id="ackBtn" class="bg-[var(--theme-color)] text-black font-bold px-8 py-3 w-full uppercase tracking-widest hover:bg-white transition" id="ui-safe-btn">Acknowledge</button>
+        </div>
+    </div>
+
+    <header class="flex justify-between items-center mb-4">
+        <a href="dashboard.html" id="ui-abort" class="text-[var(--theme-color)] text-[10px] uppercase font-bold hover:text-white">← Abort Module</a>
+        <h1 class="text-xl font-black uppercase tracking-widest" id="ui-title">Rutherford's Foil</h1>
+    </header>
+
+    <div class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 h-full min-h-0">
+        
+        <div class="col-span-1 cyber-panel p-6 flex flex-col justify-center rounded-sm">
+            <h3 class="text-xs text-[var(--theme-color)] uppercase border-b border-[var(--theme-color)] pb-2 mb-6 font-bold" id="ui-setup">Particle Beam Setup</h3>
+            
+            <div class="mb-8">
+                <label class="flex justify-between text-xs text-white mb-4"><span id="ui-energy">Beam Energy (MeV)</span> <span id="eLab">5.0</span></label>
+                <input type="range" id="eSlide" min="1.0" max="10.0" step="0.5" value="5.0">
+            </div>
+            
+            <div class="mb-8">
+                <label class="flex justify-between text-xs text-white mb-4"><span id="ui-target">Target Nucleus Z</span> <span id="zLab">79 (Gold)</span></label>
+                <input type="range" id="zSlide" min="10" max="100" step="1" value="79">
+            </div>
+        </div>
+
+        <div id="canvasContainer" class="col-span-1 md:col-span-3 cyber-panel relative rounded-sm min-h-[400px]">
+            <canvas id="atomicCanvas" class="absolute inset-0 w-full h-full"></canvas>
+            <div class="absolute top-4 right-4 text-right text-[10px] text-gray-400">
+                <span id="ui-fired">PARTICLES FIRED</span>: <span id="fireCount" class="text-white">0</span><br>
+                <span id="ui-back">BACKSCATTERED</span>: <span id="backCount" class="text-[var(--theme-color)]">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="aiChatWidget" class="fixed bottom-6 right-6 z-50 flex flex-col items-end font-mono">
+        <div id="aiChatWindow" class="hidden cyber-panel w-80 h-96 mb-4 flex-col rounded-sm overflow-hidden transition-opacity duration-300 opacity-0" style="background: rgba(5,15,5,0.95);">
+            <div class="bg-[var(--theme-color)] text-black font-black p-3 text-sm flex justify-between items-center tracking-widest">
+                <span>ASTRA_CORE</span><button id="closeChatBtn" class="hover:text-white transition px-2">X</button>
+            </div>
+            <div id="chatMessages" class="flex-1 p-4 overflow-y-auto space-y-4 text-xs scrollbar-hide"></div>
+            <form id="chatForm" class="p-2 border-t border-[var(--theme-color)] flex items-center bg-black">
+                <span class="text-[var(--theme-color)] ml-2">></span>
+                <input type="text" id="aiChatInput" class="flex-1 bg-transparent text-white outline-none text-xs px-2 py-2" autocomplete="off">
+                <button type="submit" class="text-[var(--theme-color)] font-bold px-3 py-1 border border-[var(--theme-color)] hover:bg-[var(--theme-color)] hover:text-black">SEND</button>
+            </form>
+        </div>
+        <button id="aiToggleBtn" class="bg-black border-2 border-[var(--theme-color)] text-[var(--theme-color)] w-14 h-14 rounded-full shadow-[0_0_15px_var(--theme-color)] font-black text-lg z-50 cursor-pointer">AI</button>
+    </div>
+
+    <script>
+        // --- TRANSLATIONS & SAFETY ---
+        const userLang = localStorage.getItem('astraLanguage') || 'en';
+        const t = {
+            en: { abort: "← Abort Module", title: "Rutherford's Foil", setup: "Particle Beam Setup", energy: "Beam Energy", target: "Target Nucleus", fired: "FIRED", back: "BACKSCATTERED", aiGreeting: "I am ASTRA. Ask me about atoms.", safeTitle: "LAB SAFETY PROTOCOL", safeBody: "⚠️ WARNING: Radiation Hazard. In a real lab, alpha emission sources require strict radiation protocols, lead shielding, and dosimeters. Never handle radioactive sources with bare hands.", safeBtn: "ACKNOWLEDGE" },
+            hi: { abort: "← वापस जाएं", title: "रदरफोर्ड का प्रयोग", setup: "बीम सेटअप", energy: "बीम ऊर्जा", target: "नाभिक Z", fired: "फायर किए गए", back: "वापस आए", aiGreeting: "मैं ASTRA हूँ। परमाणुओं के बारे में पूछें।", safeTitle: "सुरक्षा प्रोटोकॉल", safeBody: "⚠️ विकिरण खतरा: अल्फा स्रोतों के लिए उचित परिरक्षण का उपयोग करें। रेडियोधर्मी स्रोतों को नंगे हाथों से न छुएं।", safeBtn: "स्वीकार करें" },
+            te: { abort: "← వెనుకకు", title: "రూథర్‌ఫోర్డ్ ప్రయోగం", setup: "బీమ్ సెటప్", energy: "బీమ్ శక్తి", target: "కేంద్రకం Z", fired: "ప్రయోగించినవి", back: "వెనుకకు వచ్చినవి", aiGreeting: "నేను ASTRA. అణువుల గురించి అడగండి.", safeTitle: "ప్రయోగశాల భద్రత", safeBody: "⚠️ రేడియేషన్ ప్రమాదం: ఆల్ఫా మూలాలకు సరైన షీల్డింగ్ ఉపయోగించండి. రేడియోధార్మిక మూలాలను చేతులతో తాకవద్దు.", safeBtn: "అంగీకరిస్తున్నాను" },
+            ta: { abort: "← திரும்பு", title: "ரதர்போர்டு சோதனை", setup: "கற்றை அமைப்பு", energy: "கற்றை ஆற்றல்", target: "அணுக்கரு Z", fired: "செலுத்தப்பட்டவை", back: "திரும்பியவை", aiGreeting: "நான் ASTRA. அணுக்கள் பற்றி கேளுங்கள்.", safeTitle: "பாதுகாப்பு நெறிமுறை", safeBody: "⚠️ கதிர்வீச்சு ஆபத்து: ஆல்பா மூலங்களுக்கு சரியான கவசத்தைப் பயன்படுத்தவும். கதிரியக்க மூலங்களை வெறும் கைகளால் தொடக்கூடாது.", safeBtn: "ஒப்புக்கொள்" }
+        }[userLang] || t['en'];
+
+        document.getElementById('ui-abort').innerText = t.abort; document.getElementById('ui-title').innerText = t.title;
+        document.getElementById('ui-setup').innerText = t.setup; document.getElementById('ui-energy').innerText = t.energy;
+        document.getElementById('ui-target').innerText = t.target; document.getElementById('ui-fired').innerText = t.fired;
+        document.getElementById('ui-back').innerText = t.back;
+        document.getElementById('ui-safe-title').innerText = t.safeTitle; document.getElementById('ui-safe-body').innerText = t.safeBody; document.getElementById('ackBtn').innerText = t.safeBtn;
+
+        document.getElementById('ackBtn').addEventListener('click', () => {
+            const modal = document.getElementById('safetyModal');
+            modal.style.opacity = '0'; setTimeout(() => modal.style.display = 'none', 500);
+        });
+
+        // --- ATOMIC ENGINE ---
+        const canvas = document.getElementById('atomicCanvas'); const ctx = canvas.getContext('2d');
+        function resize() { canvas.width = document.getElementById('canvasContainer').clientWidth; canvas.height = document.getElementById('canvasContainer').clientHeight; }
+        window.addEventListener('resize', resize); resize();
+
+        let particles = [], fired = 0, backscatter = 0;
+        function emitParticle() {
+            let energy = parseFloat(document.getElementById('eSlide').value);
+            particles.push({ x: 0, y: canvas.height/2 + (Math.random() - 0.5) * 200, vx: energy, vy: 0, path: [] });
+            fired++; document.getElementById('fireCount').innerText = fired;
+        }
+
+        function draw() {
+            ctx.fillStyle = 'rgba(5,15,5,0.3)'; ctx.fillRect(0,0, canvas.width, canvas.height);
+            let nX = canvas.width / 2, nY = canvas.height / 2, z = parseFloat(document.getElementById('zSlide').value);
+            
+            document.getElementById('eLab').innerText = document.getElementById('eSlide').value;
+            document.getElementById('zLab').innerText = z + (z==79?" (Gold)":"");
+
+            ctx.fillStyle = '#00ff00'; ctx.shadowBlur = z/2; ctx.shadowColor = '#00ff00';
+            ctx.beginPath(); ctx.arc(nX, nY, z/10, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+
+            for(let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i]; p.path.push({x: p.x, y: p.y}); if(p.path.length > 20) p.path.shift();
+                let dx = p.x - nX, dy = p.y - nY, distSq = dx*dx + dy*dy, dist = Math.sqrt(distSq);
+                
+                if(dist < 150) { let force = (z * 10) / distSq; p.vx += (dx/dist) * force; p.vy += (dy/dist) * force; }
+                p.x += p.vx; p.y += p.vy;
+
+                ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 1.5; ctx.beginPath();
+                for(let j=0; j<p.path.length; j++) { if(j==0) ctx.moveTo(p.path[j].x, p.path[j].y); else ctx.lineTo(p.path[j].x, p.path[j].y); }
+                ctx.stroke();
+
+                if(p.vx < 0 && p.x < 0) { backscatter++; document.getElementById('backCount').innerText = backscatter; particles.splice(i, 1); } 
+                else if(p.x > canvas.width || p.y < 0 || p.y > canvas.height) { particles.splice(i, 1); }
+            }
+            requestAnimationFrame(draw);
+        }
+        setInterval(emitParticle, 50); draw();
+
+        // --- AI CHATBOT ---
+        const GEMINI_API_KEY = 'PASTE_YOUR_API_KEY_HERE';
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.innerHTML = `<div class="text-[var(--theme-color)]">> ${t.aiGreeting}</div>`;
+        document.getElementById('aiToggleBtn').addEventListener('click', () => { document.getElementById('aiChatWindow').classList.toggle('hidden'); setTimeout(()=>document.getElementById('aiChatWindow').classList.toggle('opacity-0'),10); });
+        document.getElementById('closeChatBtn').addEventListener('click', () => { document.getElementById('aiChatWindow').classList.add('opacity-0'); setTimeout(()=>document.getElementById('aiChatWindow').classList.add('hidden'),300); });
+        document.getElementById('chatForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); const input = document.getElementById('aiChatInput'); const text = input.value.trim(); if(!text) return;
+            chatMessages.innerHTML += `<div class="text-white text-right ml-8 mt-2"><span class="opacity-50 text-[10px]">USER</span><br>${text}</div>`; input.value = '';
+            const sysPrompt = `You are Astra. The user speaks ${userLang.toUpperCase()}. Reply ONLY in ${userLang.toUpperCase()}. Keep answers under 3 sentences. User asks: `;
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: sysPrompt + text }] }] }) });
+                const data = await response.json();
+                chatMessages.innerHTML += `<div class="text-[var(--theme-color)] mr-8 mt-2">> ${data.candidates[0].content.parts[0].text.replace(/\*\*(.*?)\*\*/g, '<span class="text-white font-bold">$1</span>')}</div>`;
+            } catch (error) { chatMessages.innerHTML += `<div class="text-red-500">> Error.</div>`; }
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+    </script>
+</body>
+</html>

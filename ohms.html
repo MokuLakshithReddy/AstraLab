@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AstraLab | Ohm's Law</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --cyber-blue: #00ffff; --bg-black: #050000; }
+        body { background: var(--bg-black); color: white; font-family: 'Courier New', monospace; overflow: hidden; }
+        .glass-panel {
+            background: rgba(0, 20, 30, 0.8); border: 1px solid var(--cyber-blue);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1), inset 0 0 10px rgba(0, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
+        }
+        .cyber-range { accent-color: var(--cyber-blue); width: 100%; cursor: pointer; }
+        .wire { background: #333; position: relative; display: flex; align-items: center; justify-content: center;}
+        .electron { width: 8px; height: 8px; background: var(--cyber-blue); border-radius: 50%; position: absolute; box-shadow: 0 0 10px var(--cyber-blue); }
+    </style>
+</head>
+<body class="p-8 flex flex-col items-center min-h-screen">
+    <header class="text-center mb-8 w-full max-w-4xl flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-black uppercase text-[#00ffff] tracking-widest">Ohm's Law Lab</h1>
+            <p class="text-xs text-gray-400 mt-1 tracking-widest">SIMULATION: CLASS 10 // ELECTRICITY</p>
+        </div>
+        <a href="dashboard.html" class="text-[#00ffff] border border-[#00ffff] px-4 py-2 text-sm hover:bg-[#00ffff] hover:text-black transition">Abort to Main</a>
+    </header>
+
+    <div class="glass-panel w-full max-w-4xl p-6 mb-6">
+        <div class="grid grid-cols-2 gap-12 mb-6">
+            <div>
+                <label class="block text-xs text-gray-400 mb-2">Voltage Source (V): <span id="voltVal" class="text-[#00ffff] font-bold text-lg">12</span> V</label>
+                <input type="range" id="voltage" min="1" max="24" value="12" class="cyber-range">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-400 mb-2">Resistance (Ω): <span id="resVal" class="text-orange-400 font-bold text-lg">4</span> Ω</label>
+                <input type="range" id="resistance" min="1" max="20" value="4" class="cyber-range">
+            </div>
+        </div>
+        <div class="text-center border-t border-gray-700 pt-6">
+            <p class="text-xs text-gray-500 tracking-widest mb-2">MEASURED CURRENT (I = V / R)</p>
+            <p class="text-5xl font-black text-[#00ffff]" id="currentOut">3.00 A</p>
+        </div>
+    </div>
+
+    <div class="glass-panel w-full max-w-4xl h-48 relative overflow-hidden flex items-center justify-center">
+        <div class="w-3/4 h-2 wire rounded-full" id="circuitWire">
+            </div>
+    </div>
+
+    <script>
+        const voltageSlider = document.getElementById('voltage');
+        const resistanceSlider = document.getElementById('resistance');
+        const voltVal = document.getElementById('voltVal');
+        const resVal = document.getElementById('resVal');
+        const currentOut = document.getElementById('currentOut');
+        const wire = document.getElementById('circuitWire');
+        
+        let electrons = [];
+        
+        // Initialize electrons
+        for(let i=0; i<15; i++) {
+            let el = document.createElement('div');
+            el.className = 'electron';
+            el.style.left = `${(i/15)*100}%`;
+            wire.appendChild(el);
+            electrons.push({ element: el, pos: (i/15)*100 });
+        }
+
+        function updateCircuit() {
+            let v = parseFloat(voltageSlider.value);
+            let r = parseFloat(resistanceSlider.value);
+            let i = v / r;
+            
+            voltVal.innerText = v;
+            resVal.innerText = r;
+            currentOut.innerText = i.toFixed(2) + " A";
+            
+            return i; // Current dictates animation speed
+        }
+
+        function animateElectrons() {
+            let current = updateCircuit();
+            let speed = current * 0.2; // Visual scaling factor
+            
+            electrons.forEach(el => {
+                el.pos += speed;
+                if (el.pos > 100) el.pos = 0;
+                el.element.style.left = `${el.pos}%`;
+            });
+            requestAnimationFrame(animateElectrons);
+        }
+
+        voltageSlider.addEventListener('input', updateCircuit);
+        resistanceSlider.addEventListener('input', updateCircuit);
+        animateElectrons();
+    </script>
+</body>
+</html>

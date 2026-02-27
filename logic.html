@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AstraLab | Logic Gates</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --cyber-green: #0f0; --dim-wire: #222; --bg-black: #050000; }
+        body { background: var(--bg-black); color: white; font-family: 'Courier New', monospace; }
+        
+        .circuit-board {
+            background: #0a0a0a; border: 1px solid #333;
+            background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px);
+            background-size: 20px 20px; position: relative;
+        }
+
+        .switch {
+            width: 50px; height: 50px; background: #111; border: 2px solid #555;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 24px; font-weight: bold; cursor: pointer; transition: 0.2s; user-select: none;
+            box-shadow: inset 0 0 10px #000;
+        }
+        .switch.on { background: rgba(0, 255, 0, 0.1); border-color: var(--cyber-green); color: var(--cyber-green); text-shadow: 0 0 5px var(--cyber-green); box-shadow: 0 0 15px rgba(0,255,0,0.2) inset; }
+
+        .gate-box {
+            background: #111; border: 2px solid #555; padding: 20px; text-align: center;
+            min-width: 120px; font-weight: 900; letter-spacing: 2px;
+        }
+
+        .led {
+            width: 40px; height: 40px; border-radius: 50%; background: #111; border: 2px solid #555;
+            transition: 0.3s ease; box-shadow: inset 0 0 10px #000;
+        }
+        .led.on { background: var(--cyber-green); border-color: white; box-shadow: 0 0 30px var(--cyber-green), inset 0 0 10px white; }
+
+        /* Wires */
+        svg.wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .wire { stroke: var(--dim-wire); stroke-width: 4; fill: none; transition: stroke 0.3s, filter 0.3s; }
+        .wire.active { stroke: var(--cyber-green); filter: drop-shadow(0 0 5px var(--cyber-green)); }
+        
+        .component { position: relative; z-index: 10; }
+    </style>
+</head>
+<body class="p-8 flex flex-col items-center min-h-screen">
+
+    <header class="text-center mb-8 w-full max-w-4xl flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-black uppercase text-[#0f0] tracking-widest">Digital Logic</h1>
+            <p class="text-xs text-gray-400 mt-1 tracking-widest">SIMULATION: CLASS 12 // SEMICONDUCTORS</p>
+        </div>
+        <a href="dashboard.html" class="text-[#0f0] border border-[#0f0] px-4 py-2 text-sm hover:bg-[#0f0] hover:text-black transition">Abort to Main</a>
+    </header>
+
+    <div class="circuit-board w-full max-w-4xl h-[400px] flex items-center justify-between px-16 rounded-lg mb-6">
+        
+        <svg class="wires">
+            <path id="wireA" class="wire" d="M 120 120 L 350 120 L 350 180" />
+            <path id="wireB" class="wire" d="M 120 280 L 350 280 L 350 220" />
+            <path id="wireOut" class="wire" d="M 500 200 L 750 200" />
+        </svg>
+
+        <div class="flex flex-col gap-24 component">
+            <div class="flex items-center gap-4">
+                <span class="text-gray-400 font-bold">IN: A</span>
+                <div id="switchA" class="switch" data-val="0">0</div>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-gray-400 font-bold">IN: B</span>
+                <div id="switchB" class="switch" data-val="0">0</div>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-center component">
+            <select id="gateSelect" class="bg-transparent text-[#0f0] border border-[#0f0] p-2 mb-4 outline-none uppercase font-bold text-center">
+                <option value="AND">AND Gate</option>
+                <option value="OR">OR Gate</option>
+                <option value="XOR">XOR Gate</option>
+                <option value="NAND">NAND Gate</option>
+                <option value="NOR">NOR Gate</option>
+            </select>
+            <div class="gate-box text-xl" id="gateLabel">AND</div>
+            <div class="text-[10px] text-gray-500 mt-4 max-w-[150px] text-center" id="gateDesc">Output is 1 only if both A and B are 1.</div>
+        </div>
+
+        <div class="flex flex-col items-center gap-4 component">
+            <span class="text-gray-400 font-bold">OUT: Q</span>
+            <div id="ledOut" class="led"></div>
+            <div id="outVal" class="text-2xl font-bold text-gray-600">0</div>
+        </div>
+
+    </div>
+
+    <script>
+        const switchA = document.getElementById('switchA');
+        const switchB = document.getElementById('switchB');
+        const gateSelect = document.getElementById('gateSelect');
+        const gateLabel = document.getElementById('gateLabel');
+        const gateDesc = document.getElementById('gateDesc');
+        const ledOut = document.getElementById('ledOut');
+        const outVal = document.getElementById('outVal');
+        
+        const wireA = document.getElementById('wireA');
+        const wireB = document.getElementById('wireB');
+        const wireOut = document.getElementById('wireOut');
+
+        const descriptions = {
+            AND: "Output is 1 only if both A and B are 1.",
+            OR: "Output is 1 if either A or B (or both) are 1.",
+            XOR: "Output is 1 only if A and B are different.",
+            NAND: "Output is 0 only if both A and B are 1.",
+            NOR: "Output is 1 only if both A and B are 0."
+        };
+
+        function evaluateLogic(a, b, gate) {
+            switch(gate) {
+                case 'AND': return a && b;
+                case 'OR': return a || b;
+                case 'XOR': return a !== b;
+                case 'NAND': return !(a && b);
+                case 'NOR': return !(a || b);
+                default: return 0;
+            }
+        }
+
+        function updateCircuit() {
+            const valA = parseInt(switchA.getAttribute('data-val'));
+            const valB = parseInt(switchB.getAttribute('data-val'));
+            const gate = gateSelect.value;
+            
+            gateLabel.innerText = gate;
+            gateDesc.innerText = descriptions[gate];
+
+            // Wire UI
+            valA ? wireA.classList.add('active') : wireA.classList.remove('active');
+            valB ? wireB.classList.add('active') : wireB.classList.remove('active');
+
+            // Evaluate Output
+            const result = evaluateLogic(valA, valB, gate);
+
+            // Output UI
+            if (result) {
+                ledOut.classList.add('on');
+                wireOut.classList.add('active');
+                outVal.innerText = "1";
+                outVal.className = "text-2xl font-bold text-[#0f0]";
+            } else {
+                ledOut.classList.remove('on');
+                wireOut.classList.remove('active');
+                outVal.innerText = "0";
+                outVal.className = "text-2xl font-bold text-gray-600";
+            }
+        }
+
+        // Event Listeners
+        [switchA, switchB].forEach(sw => {
+            sw.addEventListener('click', () => {
+                const current = sw.getAttribute('data-val');
+                const next = current === "1" ? "0" : "1";
+                sw.setAttribute('data-val', next);
+                sw.innerText = next;
+                if (next === "1") sw.classList.add('on');
+                else sw.classList.remove('on');
+                updateCircuit();
+            });
+        });
+
+        gateSelect.addEventListener('change', updateCircuit);
+        
+        // Initial Eval
+        updateCircuit();
+    </script>
+</body>
+</html>

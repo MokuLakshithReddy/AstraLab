@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AstraLab | Main Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { 
+            --theme-color: #ff003c; 
+            --bg-black: #050000; 
+            --glass-bg: rgba(10, 10, 10, 0.8); 
+        }
+        
+        body { 
+            background: var(--bg-black); 
+            color: white; 
+            font-family: 'Courier New', monospace; 
+            background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px); 
+            background-size: 30px 30px; 
+            min-height: 100vh; 
+        }
+        
+        .glass-panel { 
+            background: var(--glass-bg); 
+            border: 1px solid var(--theme-color); 
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.02); 
+            backdrop-filter: blur(5px); 
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .module-card { 
+            background: rgba(0,0,0,0.6); 
+            border: 1px solid #333; 
+            transition: all 0.3s ease; 
+            cursor: pointer; 
+            position: relative; 
+            overflow: hidden; 
+        }
+        
+        .module-card::before { 
+            content: ''; 
+            position: absolute; 
+            top: 0; left: -100%; 
+            width: 50%; height: 100%; 
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent); 
+            transform: skewX(-20deg); 
+            transition: 0.5s; 
+        }
+        
+        .module-card:hover { 
+            border-color: var(--theme-color); 
+            box-shadow: 0 0 20px rgba(0,0,0,0.8), inset 0 0 15px var(--theme-color); 
+            transform: translateY(-5px); 
+        }
+        
+        .module-card:hover::before { left: 200%; }
+        
+        .cyber-select { 
+            background: #000; 
+            color: white; 
+            border: 1px solid var(--theme-color); 
+            padding: 8px; 
+            outline: none; 
+            transition: border-color 0.3s ease;
+        }
+    </style>
+</head>
+<body class="p-6">
+
+    <header class="flex justify-between items-end mb-6 border-b pb-4 transition-colors duration-300" id="headerBorder">
+        <div>
+            <h1 class="text-4xl font-black tracking-tighter uppercase transition-shadow duration-300" style="text-shadow: 2px 0 var(--theme-color);">
+                Astra<span class="text-[var(--theme-color)] transition-colors duration-300">Lab</span>
+            </h1>
+            <p id="ui-subtitle" class="text-[10px] tracking-[0.3em] text-gray-400 mt-1">MAIN TERMINAL // SECURE CONNECTION</p>
+        </div>
+        <div class="text-right">
+            <div id="userInfo" class="text-lg font-bold tracking-widest text-[var(--theme-color)] mb-2 transition-colors duration-300">LOADING DATA...</div>
+            <button id="ui-logout" class="text-xs px-4 py-1 border border-gray-600 hover:bg-red-900 hover:text-white transition uppercase tracking-widest">
+                Terminate Session
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto">
+        
+        <div class="glass-panel p-4 mb-6 rounded-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div class="flex gap-4 w-full">
+                <div class="flex-1">
+                    <label class="block text-[10px] text-[var(--theme-color)] mb-1 uppercase font-bold transition-colors" id="ui-class-sel">Select Class</label>
+                    <select id="classSelect" class="w-full cyber-select text-sm font-bold tracking-widest cursor-pointer">
+                        <option value="8">CLASS 08</option>
+                        <option value="9">CLASS 09</option>
+                        <option value="10">CLASS 10</option>
+                        <option value="12">CLASS 12</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-[10px] text-[var(--theme-color)] mb-1 uppercase font-bold transition-colors" id="ui-sub-sel">Select Branch</label>
+                    <select id="subjectSelect" class="w-full cyber-select text-sm uppercase font-bold tracking-widest cursor-pointer">
+                        <option value="physics" id="ui-opt-phys">PHYSICS ENGINE</option>
+                        <option value="chemistry" id="ui-opt-chem">CHEMISTRY LAB</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-[10px] text-[var(--theme-color)] mb-1 uppercase font-bold transition-colors" id="ui-lang-sel">Select Language</label>
+                    <select id="langSelect" class="w-full cyber-select text-sm uppercase font-bold tracking-widest cursor-pointer">
+                        <option value="en">ENGLISH</option>
+                        <option value="hi">HINDI</option>
+                        <option value="te">TELUGU</option>
+                        <option value="ta">TAMIL</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-panel p-6 mb-8 rounded-sm flex items-center justify-between">
+            <div>
+                <h2 class="text-2xl font-bold uppercase tracking-widest" id="ui-welcome">Welcome, Researcher.</h2>
+                <p class="text-sm text-gray-400 mt-2" id="ui-instructions">Select a module below to initialize the simulation environment.</p>
+            </div>
+            <div class="text-[var(--theme-color)] text-4xl opacity-50 transition-colors duration-300" id="subjectIcon"></div>
+        </div>
+
+        <div id="moduleGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+    </main>
+
+    <script>
+        // 1. STATE MANAGEMENT
+        let userClass = localStorage.getItem('astraClassLevel') || '10';
+        let userSubject = localStorage.getItem('astraSubject') || 'physics';
+        let userLang = localStorage.getItem('astraLanguage') || 'en';
+
+        // Bind Selectors to current state
+        const classSelect = document.getElementById('classSelect');
+        const subjectSelect = document.getElementById('subjectSelect');
+        const langSelect = document.getElementById('langSelect');
+        
+        classSelect.value = userClass;
+        subjectSelect.value = userSubject;
+        langSelect.value = userLang;
+
+        // 2. LOCALIZATION DICTIONARY (i18n)
+        const translations = {
+            en: { subtitle: "MAIN TERMINAL // SECURE CONNECTION", logout: "Terminate Session", welcome: "Welcome, Researcher.", instructions: "Select a module below to initialize.", classStr: "CLASS", initiate: "INITIATE >", noModules: "NO MODULES FOUND", noModulesDesc: "The curriculum database is currently updating.", classSel: "Select Class", subSel: "Select Branch", langSel: "Language", physOpt: "PHYSICS ENGINE", chemOpt: "CHEMISTRY LAB", physSub: "PHYSICS", chemSub: "CHEMISTRY" },
+            hi: { subtitle: "मुख्य टर्मिनल // सुरक्षित कनेक्शन", logout: "सत्र समाप्त करें", welcome: "स्वागत है, शोधकर्ता।", instructions: "आरंभ करने के लिए नीचे एक मॉड्यूल चुनें।", classStr: "कक्षा", initiate: "शुरू करें >", noModules: "कोई मॉड्यूल नहीं मिला", noModulesDesc: "पाठ्यक्रम डेटाबेस वर्तमान में अपडेट हो रहा है।", classSel: "कक्षा चुनें", subSel: "शाखा चुनें", langSel: "भाषा चुनें", physOpt: "भौतिकी इंजन", chemOpt: "रसायन प्रयोगशाला", physSub: "भौतिक विज्ञान", chemSub: "रसायन विज्ञान" },
+            te: { subtitle: "ప్రధాన టెర్మినల్ // సురక్షిత కనెక్షన్", logout: "సెషన్ ముగించు", welcome: "స్వాగతం, పరిశోధకుడా.", instructions: "ప్రారంభించడానికి క్రింద ఒక మాడ్యూల్‌ను ఎంచుకోండి.", classStr: "తరగతి", initiate: "ప్రారంభించు >", noModules: "మాడ్యూల్స్ కనుగొనబడలేదు", noModulesDesc: "కరికులం డేటాబేస్ ప్రస్తుతం అప్‌డేట్ అవుతోంది.", classSel: "తరగతిని ఎంచుకోండి", subSel: "బ్రాంచ్ ఎంచుకోండి", langSel: "భాష ఎంచుకోండి", physOpt: "ఫిజిక్స్ ఇంజిన్", chemOpt: "కెమిస్ట్రీ ల్యాబ్", physSub: "భౌతిక శాస్త్రం", chemSub: "రసాయన శాస్త్రం" },
+            ta: { subtitle: "முக்கிய முனையம் // பாதுகாப்பான இணைப்பு", logout: "அமர்வை முடி", welcome: "நல்வரவு, ஆராய்ச்சியாளர்.", instructions: "தொடங்க கீழே உள்ள தொகுதியைத் தேர்ந்தெடுக்கவும்.", classStr: "வகுப்பு", initiate: "தொடங்கு >", noModules: "தொகுதிகள் எதுவும் கிடைக்கவில்லை", noModulesDesc: "பாடத்திட்ட தரவுத்தளம் தற்போது புதுப்பிக்கப்படுகிறது.", classSel: "வகுப்பைத் தேர்ந்தெடுக்கவும்", subSel: "பிரிவைத் தேர்ந்தெடுக்கவும்", langSel: "மொழியைத் தேர்ந்தெடுக்கவும்", physOpt: "இயற்பியல் இயந்திரம்", chemOpt: "வேதியியல் ஆய்வகம்", physSub: "இயற்பியல்", chemSub: "வேதியியல்" }
+        };
+
+        // 3. THEME & MODULE DATABASE
+        const themes = { 
+            physics: { color: '#00ffff', icon: '⚛️' }, 
+            chemistry: { color: '#00ff00', icon: '🧪' } 
+        };
+
+        const moduleDatabase = {
+            physics: {
+                "8": [ { title: "Friction Dynamics", desc: "Static vs Kinetic thresholds.", file: "friction.html", type: "SIMULATION" } ],
+                "9": [ { title: "Snell's Law Optics", desc: "Refraction matrix calibration.", file: "optics.html", type: "OPTICS" } ],
+                "10": [ { title: "Ohm's Law Matrix", desc: "Virtual breadboard for V, I, R.", file: "ohms_law.html", type: "CIRCUIT LAB" } ],
+                "12": [ { title: "Digital Logic Gates", desc: "Semiconductor simulation: AND, OR, NAND.", file: "logic.html", type: "CIRCUIT LAB" } ]
+            },
+            chemistry: {
+                "9": [ { title: "Rutherford's Foil", desc: "Atomic structure & backscatter.", file: "atomic.html", type: "NUCLEAR LAB" } ],
+                "10": [ { title: "Acid/Base Titration", desc: "Virtual pH testing and neutralization curve.", file: "titration.html", type: "TITRATION LAB" } ]
+            }
+        };
+
+        const moduleGrid = document.getElementById('moduleGrid');
+        
+        // 4. CORE RENDER FUNCTION
+        function updateDashboard() {
+            // Get translation for current language
+            const t = translations[userLang] || translations['en'];
+
+            // Apply Translations to Static UI
+            document.getElementById('ui-subtitle').innerText = t.subtitle;
+            document.getElementById('ui-logout').innerText = t.logout;
+            document.getElementById('ui-welcome').innerText = t.welcome;
+            document.getElementById('ui-instructions').innerText = t.instructions;
+            document.getElementById('ui-class-sel').innerText = t.classSel;
+            document.getElementById('ui-sub-sel').innerText = t.subSel;
+            document.getElementById('ui-lang-sel').innerText = t.langSel;
+            document.getElementById('ui-opt-phys').innerText = t.physOpt;
+            document.getElementById('ui-opt-chem').innerText = t.chemOpt;
+
+            // Update UI Theme
+            const currentTheme = themes[userSubject] || { color: '#ff003c', icon: '⚙️' };
+            const localizedSubjectName = userSubject === 'physics' ? t.physSub : t.chemSub;
+            
+            document.documentElement.style.setProperty('--theme-color', currentTheme.color);
+            document.getElementById('headerBorder').style.borderColor = currentTheme.color;
+            document.getElementById('userInfo').innerText = `${t.classStr} ${userClass} // ${localizedSubjectName}`;
+            document.getElementById('subjectIcon').innerText = currentTheme.icon;
+
+            // Clear existing grid
+            moduleGrid.innerHTML = '';
+
+            // Render matching modules
+            if (moduleDatabase[userSubject] && moduleDatabase[userSubject][userClass]) {
+                const modules = moduleDatabase[userSubject][userClass];
+                modules.forEach(mod => {
+                    const card = document.createElement('div');
+                    card.className = 'module-card p-6 rounded-sm flex flex-col justify-between min-h-[200px]';
+                    card.innerHTML = `
+                        <div>
+                            <span class="text-[10px] tracking-widest text-[var(--theme-color)] border border-[var(--theme-color)] px-2 py-1 mb-4 inline-block transition-colors">
+                                ${mod.type}
+                            </span>
+                            <h3 class="text-xl font-bold uppercase mb-2 text-white">${mod.title}</h3>
+                            <p class="text-sm text-gray-400">${mod.desc}</p>
+                        </div>
+                        <div class="mt-6 text-right">
+                            <span class="text-xs tracking-widest text-gray-500 group-hover:text-white transition">${t.initiate}</span>
+                        </div>
+                    `;
+                    card.addEventListener('click', () => window.location.href = mod.file);
+                    moduleGrid.appendChild(card);
+                });
+            } else {
+                moduleGrid.innerHTML = `
+                    <div class="col-span-full text-center py-20 border border-dashed border-gray-600 bg-gray-900 bg-opacity-50">
+                        <h3 class="text-xl font-bold text-gray-400 mb-2">${t.noModules}</h3>
+                        <p class="text-sm text-gray-500">${t.noModulesDesc}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 5. EVENT LISTENERS
+        classSelect.addEventListener('change', (e) => {
+            userClass = e.target.value;
+            localStorage.setItem('astraClassLevel', userClass);
+            updateDashboard();
+        });
+
+        subjectSelect.addEventListener('change', (e) => {
+            userSubject = e.target.value;
+            localStorage.setItem('astraSubject', userSubject);
+            updateDashboard();
+        });
+
+        langSelect.addEventListener('change', (e) => {
+            userLang = e.target.value;
+            localStorage.setItem('astraLanguage', userLang);
+            updateDashboard();
+        });
+
+        // Initial Load
+        updateDashboard();
+
+        // Logout
+        document.getElementById('ui-logout').addEventListener('click', () => {
+            localStorage.removeItem('astraClassLevel');
+            localStorage.removeItem('astraSubject');
+            localStorage.removeItem('astraLanguage');
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s';
+            setTimeout(() => { window.location.href = 'index.html'; }, 500);
+        });
+    </script>
+</body>
+</html>

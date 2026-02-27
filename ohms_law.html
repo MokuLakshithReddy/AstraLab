@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AstraLab | Ohm's Law Matrix</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --theme-color: #00ffff; }
+        body { background: #050000; color: white; font-family: 'Courier New', monospace; overflow: hidden; }
+        .cyber-panel { background: rgba(10,0,0,0.8); border: 1px solid var(--theme-color); }
+        input[type=range] { -webkit-appearance: none; width: 100%; background: #003333; height: 2px; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; background: var(--theme-color); cursor: pointer; border-radius: 50%; box-shadow: 0 0 10px var(--theme-color); }
+        .chat-input { background: rgba(0,255,255,0.05); border: 1px solid #005555; color: white; outline: none; }
+        .chat-input:focus { border-color: var(--theme-color); box-shadow: inset 0 0 10px rgba(0,255,255,0.3); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="h-screen flex flex-col p-4">
+
+    <div id="safetyModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm transition-opacity duration-500">
+        <div class="cyber-panel p-8 max-w-md w-full text-center relative shadow-[0_0_30px_var(--theme-color)]">
+            <h2 class="text-2xl font-black text-[var(--theme-color)] mb-4 tracking-widest uppercase" id="ui-safe-title">Safety Protocol</h2>
+            <div class="text-sm text-gray-300 mb-8 leading-relaxed" id="ui-safe-body"></div>
+            <button id="ackBtn" class="bg-[var(--theme-color)] text-black font-bold px-8 py-3 w-full uppercase tracking-widest hover:bg-white transition" id="ui-safe-btn">Acknowledge</button>
+        </div>
+    </div>
+
+    <header class="flex justify-between items-center mb-4">
+        <a href="dashboard.html" id="ui-abort" class="text-[var(--theme-color)] text-[10px] uppercase font-bold hover:text-white">← Abort Module</a>
+        <h1 class="text-xl font-black uppercase text-white tracking-widest" id="ui-title">Ohm's Law</h1>
+    </header>
+
+    <div class="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4 h-full min-h-0">
+        
+        <div class="col-span-1 md:col-span-8 flex flex-col gap-4">
+            <div class="cyber-panel p-6 flex gap-8 items-center justify-between rounded-sm">
+                <div class="flex-1">
+                    <label class="flex justify-between text-[10px] text-[var(--theme-color)] mb-2 uppercase font-bold"><span id="ui-volt">Voltage (V)</span> <span id="vLab" class="text-white">10 V</span></label>
+                    <input type="range" id="vSlide" min="1" max="50" value="10">
+                </div>
+                <div class="flex-1">
+                    <label class="flex justify-between text-[10px] text-[var(--theme-color)] mb-2 uppercase font-bold"><span id="ui-res">Resistance (R)</span> <span id="rLab" class="text-white">5 Ω</span></label>
+                    <input type="range" id="rSlide" min="1" max="25" value="5">
+                </div>
+                <div class="text-center px-6 py-2 bg-[rgba(0,255,255,0.1)] border border-[var(--theme-color)]">
+                    <div class="text-[9px] uppercase text-gray-400" id="ui-cur">Live Current</div>
+                    <div id="iLab" class="text-3xl font-black text-white glow">2.00 A</div>
+                </div>
+            </div>
+
+            <div id="canvasContainer" class="flex-1 cyber-panel relative rounded-sm w-full min-h-[300px]">
+                <canvas id="circuitCanvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+            </div>
+        </div>
+
+        <div class="col-span-1 md:col-span-4 cyber-panel flex flex-col rounded-sm">
+            <div class="p-3 border-b border-[var(--theme-color)] flex justify-between items-center">
+                <h3 class="text-xs font-bold text-[var(--theme-color)] uppercase tracking-widest">Astra_AI Mentor</h3>
+            </div>
+            <div id="chatLog" class="flex-1 overflow-y-auto p-4 text-xs font-mono space-y-4 scrollbar-hide"></div>
+            <div class="p-4 border-t border-[#005555]">
+                <form id="chatForm" class="flex gap-2">
+                    <input type="text" id="chatInput" autocomplete="off" class="flex-1 chat-input p-2 text-xs">
+                    <button type="submit" class="px-4 bg-[var(--theme-color)] text-black font-bold text-xs uppercase hover:bg-white transition duration-200">Send</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- TRANSLATIONS & SAFETY ---
+        const userLang = localStorage.getItem('astraLanguage') || 'en';
+        const t = {
+            en: { abort: "← Abort Module", title: "Ohm's Law", volt: "Voltage (V)", res: "Resistance (R)", cur: "Live Current", aiGreeting: "> SYSTEM ONLINE. Observe the circuit. Ask any question.", safeTitle: "LAB SAFETY PROTOCOL", safeBody: "⚠️ WARNING: Always double-check circuit wiring before turning on the power supply. Do not touch resistors while current is flowing, as they can reach high temperatures.", safeBtn: "ACKNOWLEDGE" },
+            hi: { abort: "← वापस जाएं", title: "ओम का नियम", volt: "वोल्टेज (V)", res: "प्रतिरोध (R)", cur: "वर्तमान (Current)", aiGreeting: "> सिस्टम ऑनलाइन। सर्किट का निरीक्षण करें।", safeTitle: "सुरक्षा प्रोटोकॉल", safeBody: "⚠️ चेतावनी: बिजली चालू करने से पहले हमेशा वायरिंग की जांच करें। प्रतिरोधों को न छुएं क्योंकि वे गर्म हो सकते हैं।", safeBtn: "स्वीकार करें" },
+            te: { abort: "← వెనుకకు", title: "ఓమ్ నియమం", volt: "వోల్టేజ్ (V)", res: "నిరోధకత (R)", cur: "విద్యుత్ ప్రవాహం", aiGreeting: "> సిస్టమ్ ఆన్‌లైన్. సర్క్యూట్‌ను గమనించండి.", safeTitle: "ప్రయోగశాల భద్రత", safeBody: "⚠️ హెచ్చరిక: పవర్ ఆన్ చేయడానికి ముందు వైరింగ్‌ను తనిఖీ చేయండి. వేడిగా ఉన్న రెసిస్టర్‌లను తాకవద్దు.", safeBtn: "అంగీకరిస్తున్నాను" },
+            ta: { abort: "← திரும்பு", title: "ஓம் விதி", volt: "மின்னழுத்தம் (V)", res: "மின்தடை (R)", cur: "மின்னோட்டம்", aiGreeting: "> கணினி இயங்குகிறது. சுற்றுகளை கவனிக்கவும்.", safeTitle: "பாதுகாப்பு நெறிமுறை", safeBody: "⚠️ எச்சரிக்கை: மின்சாரத்தை இயக்குவதற்கு முன் வயரிங் சரிபார்க்கவும். சூடான மின்தடையங்களை தொட வேண்டாம்.", safeBtn: "ஒப்புக்கொள்" }
+        }[userLang] || t['en'];
+
+        document.getElementById('ui-abort').innerText = t.abort; document.getElementById('ui-title').innerText = t.title;
+        document.getElementById('ui-volt').innerText = t.volt; document.getElementById('ui-res').innerText = t.res;
+        document.getElementById('ui-cur').innerText = t.cur;
+        document.getElementById('ui-safe-title').innerText = t.safeTitle; document.getElementById('ui-safe-body').innerText = t.safeBody; document.getElementById('ackBtn').innerText = t.safeBtn;
+        
+        const chatLog = document.getElementById('chatLog');
+        chatLog.innerHTML = `<div class="text-[var(--theme-color)]">${t.aiGreeting}</div>`;
+
+        document.getElementById('ackBtn').addEventListener('click', () => {
+            const modal = document.getElementById('safetyModal');
+            modal.style.opacity = '0'; setTimeout(() => modal.style.display = 'none', 500);
+        });
+
+        // --- PHYSICS ENGINE ---
+        let state = { v: 10, r: 5, i: 2, isOverloaded: false };
+        const vSlide = document.getElementById('vSlide'); const rSlide = document.getElementById('rSlide');
+        const vLab = document.getElementById('vLab'); const rLab = document.getElementById('rLab'); const iLab = document.getElementById('iLab');
+
+        function appendLog(sender, message) {
+            const div = document.createElement('div');
+            if (sender === 'USER') { div.className = "text-white text-right border-r-2 border-[var(--theme-color)] pr-2"; div.innerHTML = `<span class="opacity-50 text-[10px]">USER</span><br>${message}`; } 
+            else { div.className = "text-[var(--theme-color)] border-l-2 border-[var(--theme-color)] pl-2"; div.innerHTML = `> ${message.replace(/\*\*(.*?)\*\*/g, '<span class="text-white font-bold">$1</span>')}`; }
+            chatLog.appendChild(div); chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function updatePhysics() {
+            state.v = parseFloat(vSlide.value); state.r = parseFloat(rSlide.value); state.i = state.v / state.r;
+            vLab.innerText = state.v + " V"; rLab.innerText = state.r + " Ω"; iLab.innerText = state.i.toFixed(2) + " A";
+            if(state.i > 8.0) { iLab.style.color = "#ff003c"; if(!state.isOverloaded) { state.isOverloaded = true; appendLog('SYSTEM', '⚠️ WARNING: Circuit overloaded! Resistor overheating.'); } } 
+            else { iLab.style.color = "white"; state.isOverloaded = false; }
+        }
+        vSlide.addEventListener('input', updatePhysics); rSlide.addEventListener('input', updatePhysics);
+
+        const canvas = document.getElementById('circuitCanvas'); const ctx = canvas.getContext('2d'); const container = document.getElementById('canvasContainer');
+        function resizeCanvas() { canvas.width = container.clientWidth; canvas.height = container.clientHeight; }
+        window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+        let electrons = [0, 0.25, 0.5, 0.75];
+        function drawCircuit() {
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            let mx = canvas.width * 0.15, my = canvas.height * 0.2, cw = canvas.width - (mx * 2), ch = canvas.height - (my * 2);
+
+            ctx.strokeStyle = '#003333'; ctx.lineWidth = 4; ctx.strokeRect(mx, my, cw, ch);
+
+            ctx.fillStyle = 'white'; ctx.fillRect(mx - 20, my + ch/2 - 30, 40, 60);
+            ctx.fillStyle = '#050000'; ctx.font = "bold 20px monospace"; ctx.fillText("+", mx - 6, my + ch/2 - 5); ctx.fillText("-", mx - 6, my + ch/2 + 15);
+            ctx.fillStyle = 'white'; ctx.font = "12px monospace"; ctx.fillText(state.v + "V", mx - 35, my + ch/2 - 40);
+
+            ctx.fillStyle = '#050000'; ctx.fillRect(mx + cw - 10, my + ch/2 - 40, 20, 80);
+            ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(mx + cw, my + ch/2 - 40);
+            for(let j=1; j<=6; j++) { ctx.lineTo(mx + cw + (j%2===0 ? -15 : 15), my + ch/2 - 40 + (j*(80/6))); }
+            ctx.lineTo(mx + cw, my + ch/2 + 40); ctx.stroke();
+            ctx.fillStyle = 'white'; ctx.fillText(state.r + "Ω", mx + cw + 25, my + ch/2 + 5);
+
+            let speed = state.i * 0.003;
+            ctx.fillStyle = state.isOverloaded ? '#ff003c' : '#00ffff'; ctx.shadowBlur = 15; ctx.shadowColor = ctx.fillStyle;
+            
+            electrons.forEach((e, idx) => {
+                electrons[idx] += speed; if(electrons[idx] > 1) electrons[idx] = 0;
+                let p = electrons[idx], ex, ey;
+                if(p < 0.25) { ex = mx + (p/0.25)*cw; ey = my; } else if(p < 0.5) { ex = mx + cw; ey = my + ((p-0.25)/0.25)*ch; }
+                else if(p < 0.75) { ex = mx + cw - ((p-0.5)/0.25)*cw; ey = my + ch; } else { ex = mx; ey = my + ch - ((p-0.75)/0.25)*ch; }
+                ctx.beginPath(); ctx.arc(ex, ey, 6, 0, Math.PI*2); ctx.fill();
+            });
+            ctx.shadowBlur = 0;
+            if(state.isOverloaded) { ctx.fillStyle = "rgba(255, 0, 60, 0.1)"; ctx.fillRect(0,0,canvas.width,canvas.height); }
+            requestAnimationFrame(drawCircuit);
+        }
+        drawCircuit();
+
+        // --- AI CHATBOT ---
+        const GEMINI_API_KEY = 'PASTE_YOUR_API_KEY_HERE';
+        const chatForm = document.getElementById('chatForm'); const chatInput = document.getElementById('chatInput');
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault(); const text = chatInput.value.trim(); if (!text) return;
+            appendLog('USER', text); chatInput.value = '';
+
+            const procDiv = document.createElement('div'); procDiv.className = "text-[var(--theme-color)] opacity-50 animate-pulse border-l-2 border-[var(--theme-color)] pl-2"; procDiv.innerText = "> Uplinking..."; chatLog.appendChild(procDiv); chatLog.scrollTop = chatLog.scrollHeight;
+            const sysPrompt = `You are Astra. User speaks ${userLang.toUpperCase()}. Reply ONLY in ${userLang.toUpperCase()}. Circuit: V=${state.v}V, R=${state.r}Ω, I=${state.i.toFixed(2)}A. Answer under 3 sentences. User asks: `;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: sysPrompt + text }] }] }) });
+                const data = await response.json(); procDiv.remove(); appendLog('AI', data.candidates[0].content.parts[0].text);
+            } catch (error) { procDiv.remove(); appendLog('SYSTEM', `ERROR.`); }
+        });
+    </script>
+</body>
+</html>

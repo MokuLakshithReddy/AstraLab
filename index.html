@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AstraLab | Secure Gateway</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { --cyber-red: #ff003c; --dark-red: #8b0000; --bg-black: #050000; }
+        body { background: var(--bg-black); color: white; font-family: 'Courier New', monospace; overflow: hidden; perspective: 1000px; }
+        #gpuCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; will-change: transform; }
+        .glass-panel {
+            background: rgba(10, 0, 0, 0.7); border: 1px solid var(--cyber-red);
+            box-shadow: 0 0 30px rgba(255, 0, 60, 0.2), inset 0 0 20px rgba(255, 0, 60, 0.1);
+            backdrop-filter: blur(10px); transform-style: preserve-3d; transition: transform 0.1s;
+        }
+        .cyber-input { background: rgba(255,0,60,0.05); border: 1px solid var(--dark-red); color: var(--cyber-red); outline: none; transition: 0.3s; }
+        .cyber-input:focus { border-color: var(--cyber-red); box-shadow: 0 0 15px rgba(255,0,60,0.4) inset; }
+        .btn-glitch {
+            background: transparent; border: 1px solid var(--cyber-red); color: var(--cyber-red);
+            text-transform: uppercase; font-weight: 900; position: relative; overflow: hidden; transition: 0.3s; cursor: pointer;
+        }
+        .btn-glitch:hover { background: var(--cyber-red); color: black; box-shadow: 0 0 25px var(--cyber-red); text-shadow: none; }
+        #bootSequence { position: fixed; inset: 0; background: black; z-index: 50; display: flex; flex-direction: column; justify-content: center; padding: 2rem; color: var(--cyber-red); }
+        .fade-transition { transition: opacity 0.5s ease-in-out; }
+    </style>
+</head>
+<body>
+
+    <div id="bootSequence">
+        <h2 class="text-4xl font-black mb-4">ASTRA_OS v9.4</h2>
+        <div id="bootText" class="text-xs space-y-1 opacity-70"></div>
+    </div>
+
+    <canvas id="gpuCanvas"></canvas>
+
+    <div class="min-h-screen flex flex-col items-center justify-center p-4 relative z-10 fade-transition" id="mainUI" style="opacity: 0;">
+        <header class="text-center mb-10 transform translate-z-10">
+            <h1 class="text-7xl font-black tracking-tighter uppercase" style="text-shadow: 2px 0 #ff003c, -2px 0 #00ffff;">Astra<span class="text-[#ff003c]">Lab</span></h1>
+            <p class="text-xs tracking-[0.5em] mt-2 text-[#ff003c]">Quantum Neural Engine • Authorized Access Only</p>
+        </header>
+
+        <div class="glass-panel p-10 w-full max-w-md rounded-sm relative" id="tiltCard" style="min-height: 380px;">
+            
+            <div id="authContainer" class="fade-transition absolute inset-0 p-10 w-full h-full flex flex-col justify-center">
+                <h2 class="text-2xl font-bold mb-6 uppercase tracking-widest border-b border-[#ff003c] pb-2 text-white">System Override</h2>
+                <form id="authForm" class="space-y-6">
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest mb-2 text-gray-400">Researcher ID</label>
+                        <input type="text" required class="w-full cyber-input p-4 text-sm font-bold" placeholder="ADMIN_CLASS_10">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest mb-2 text-gray-400">Neural Passcode</label>
+                        <input type="password" required class="w-full cyber-input p-4 text-sm tracking-widest" placeholder="••••••••">
+                    </div>
+                    <button type="submit" id="authBtn" class="w-full btn-glitch py-4 mt-4 text-sm tracking-widest">Establish Connection</button>
+                </form>
+            </div>
+
+            <div id="classContainer" class="fade-transition absolute inset-0 p-10 w-full h-full flex flex-col justify-center" style="opacity: 0; pointer-events: none;">
+                <h2 class="text-xl font-bold mb-6 text-center uppercase tracking-widest text-white">Select Protocol Level</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <button class="class-btn btn-glitch py-6 text-sm tracking-widest" data-class="8">CLASS 08</button>
+                    <button class="class-btn btn-glitch py-6 text-sm tracking-widest" data-class="9">CLASS 09</button>
+                    <button class="class-btn btn-glitch py-6 text-sm tracking-widest" data-class="10">CLASS 10</button>
+                    <button class="class-btn btn-glitch py-6 text-sm tracking-widest" data-class="12">CLASS 12</button>
+                </div>
+            </div>
+
+            <div id="subjectContainer" class="fade-transition absolute inset-0 p-10 w-full h-full flex flex-col justify-center" style="opacity: 0; pointer-events: none;">
+                <h2 class="text-xl font-bold mb-6 text-center uppercase tracking-widest text-white">Select Research Branch</h2>
+                <div class="grid grid-cols-1 gap-4">
+                    <button class="subject-btn btn-glitch py-6 text-sm tracking-widest" data-subject="physics">PHYSICS ENGINE</button>
+                    <button class="subject-btn btn-glitch py-6 text-sm tracking-widest" data-subject="chemistry">CHEMISTRY LAB</button>
+                </div>
+            </div>
+
+            <div id="languageContainer" class="fade-transition absolute inset-0 p-10 w-full h-full flex flex-col justify-center" style="opacity: 0; pointer-events: none;">
+                <h2 class="text-xl font-bold mb-6 text-center uppercase tracking-widest text-white">Select UI Language</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <button class="lang-btn btn-glitch py-4 text-sm tracking-widest" data-lang="en">ENGLISH</button>
+                    <button class="lang-btn btn-glitch py-4 text-sm tracking-widest" data-lang="hi">HINDI</button>
+                    <button class="lang-btn btn-glitch py-4 text-sm tracking-widest" data-lang="te">TELUGU</button>
+                    <button class="lang-btn btn-glitch py-4 text-sm tracking-widest" data-lang="ta">TAMIL</button>
+                </div>
+                <div class="text-center mt-6">
+                    <p class="text-[10px] text-[#ff003c] tracking-widest animate-pulse">Initializing OS environment...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- BOOT & BACKGROUND LOGIC ---
+        const bootText = ["Initializing context...", "Allocating buffers...", "Connecting Core...", "Access Granted."];
+        let delay = 0;
+        bootText.forEach(text => { setTimeout(() => { document.getElementById('bootText').innerHTML += `<div>> ${text}</div>`; }, delay); delay += 300; });
+        setTimeout(() => { document.getElementById('bootSequence').style.display = 'none'; document.getElementById('mainUI').style.opacity = '1'; }, delay + 400);
+
+        const card = document.getElementById('tiltCard');
+        document.addEventListener('mousemove', (e) => { card.style.transform = `rotateY(${(window.innerWidth / 2 - e.pageX) / 25}deg) rotateX(${(window.innerHeight / 2 - e.pageY) / 25}deg)`; });
+
+        const canvas = document.getElementById('gpuCanvas'); const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let particles = Array.from({length: 80}, () => ({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random()-0.5)*2, vy: (Math.random()-0.5)*2 }));
+        function drawParticles() {
+            ctx.fillStyle = 'rgba(5, 0, 0, 0.2)'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#ff003c';
+            particles.forEach(p => { p.x += p.vx; p.y += p.vy; if(p.x<0||p.x>canvas.width) p.vx*=-1; if(p.y<0||p.y>canvas.height) p.vy*=-1; ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI * 2); ctx.fill(); });
+            requestAnimationFrame(drawParticles);
+        } drawParticles();
+
+        // --- TRANSITION LOGIC ---
+        const switchPanel = (hideId, showId) => {
+            const hideEl = document.getElementById(hideId); const showEl = document.getElementById(showId);
+            hideEl.style.opacity = '0'; hideEl.style.pointerEvents = 'none';
+            setTimeout(() => { showEl.style.opacity = '1'; showEl.style.pointerEvents = 'auto'; }, 500);
+        };
+
+        document.getElementById('authForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('authBtn'); btn.textContent = "DECRYPTING..."; btn.classList.add('animate-pulse'); btn.style.background = 'var(--cyber-red)'; btn.style.color = 'black';
+            setTimeout(() => switchPanel('authContainer', 'classContainer'), 1000);
+        });
+
+        document.querySelectorAll('.class-btn').forEach(btn => btn.addEventListener('click', (e) => {
+            localStorage.setItem('astraClassLevel', e.target.getAttribute('data-class'));
+            e.target.style.background = 'white'; setTimeout(() => switchPanel('classContainer', 'subjectContainer'), 300);
+        }));
+
+        document.querySelectorAll('.subject-btn').forEach(btn => btn.addEventListener('click', (e) => {
+            localStorage.setItem('astraSubject', e.target.getAttribute('data-subject'));
+            e.target.style.background = 'white'; setTimeout(() => switchPanel('subjectContainer', 'languageContainer'), 300);
+        }));
+
+        document.querySelectorAll('.lang-btn').forEach(btn => btn.addEventListener('click', (e) => {
+            localStorage.setItem('astraLanguage', e.target.getAttribute('data-lang'));
+            e.target.style.background = 'white'; setTimeout(() => window.location.href = 'dashboard.html', 300);
+        }));
+    </script>
+</body>
+</html>
