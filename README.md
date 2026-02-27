@@ -1,5 +1,6 @@
 # AstraLab
 An AI-powered virtual lab that not only simulates chemistry experiments but intelligently detects dangerous chemical combinations in real time and prevents unsafe actions before they happen.
+
 🚀 Overview
 
 Virtual Science Lab Assistant is an AI-powered platform designed to simulate chemistry experiments in a safe and interactive digital environment. It guides students step-by-step, detects unsafe chemical combinations, and provides real-time safety warnings to ensure risk-free experimentation.
