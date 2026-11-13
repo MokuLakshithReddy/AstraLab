@@ -1,92 +1,88 @@
-# AstraLab
-An AI-powered virtual lab that not only simulates chemistry experiments but intelligently detects dangerous chemical combinations in real time and prevents unsafe actions before they happen.
+# AstraLab — Interactive STEM Lab Prototype
 
-🚀 Overview
+AstraLab is a browser-based collection of stylized STEM learning simulations. It provides a sci-fi themed entry screen, class/subject/language selection, and standalone modules for introductory physics and chemistry concepts.
 
-Virtual Science Lab Assistant is an AI-powered platform designed to simulate chemistry experiments in a safe and interactive digital environment. It guides students step-by-step, detects unsafe chemical combinations, and provides real-time safety warnings to ensure risk-free experimentation.
+![GitHub stars](https://img.shields.io/github/stars/MokuLakshithReddy/AstraLab?style=flat-square&label=stars)
+![GitHub forks](https://img.shields.io/github/forks/MokuLakshithReddy/AstraLab?style=flat-square&label=forks)
+![Open issues](https://img.shields.io/github/issues/MokuLakshithReddy/AstraLab?style=flat-square&label=open%20issues)
+![Last commit](https://img.shields.io/github/last-commit/MokuLakshithReddy/AstraLab?style=flat-square)
+![Stack](https://img.shields.io/badge/Stack-HTML%20%7C%20CSS%20%7C%20JavaScript-f1e05a?style=flat-square)
 
-🎯 Problem Statement
+## Why it matters
 
-Many schools lack access to fully equipped laboratories, and real chemistry experiments involve safety risks and high costs. Students need a safe, accessible, and intelligent platform to learn and practice experiments without physical hazards.
+Interactive models can make abstract STEM concepts easier to explore. AstraLab packages small browser simulations behind a consistent learner flow, with class-level and language preferences stored locally.
 
-💡 Solution
+## Learner flow
 
-We developed an AI-driven virtual assistant that:
+```mermaid
+flowchart TD
+    A["AstraLab entry screen"] --> B["Researcher ID and passcode form"]
+    B --> C["Class selection"]
+    C --> D["Physics or Chemistry"]
+    D --> E["Choose English, Hindi, Telugu or Tamil"]
+    E --> F["Store preferences in browser localStorage"]
+    F --> G["Main module dashboard"]
+    G --> H["Select a standalone STEM simulation"]
+    H --> I["Interact with local controls and visual model"]
+```
 
-Simulates chemistry experiments
+## Available modules
 
-Provides step-by-step guidance
+| Subject | Class | Module | File |
+| --- | ---: | --- | --- |
+| Physics | 8 | Friction Dynamics | `friction.html` |
+| Physics | 9 | Snell's Law Optics | `optics.html` |
+| Physics | 10 | Ohm's Law Matrix | `ohms_law.html` |
+| Physics | 12 | Digital Logic Gates | `logic.html` |
+| Chemistry | 9 | Rutherford's Foil / Atomic Structure | `atomic.html` |
+| Chemistry | 10 | Acid/Base Titration | `titration.html` |
 
-Detects dangerous chemical combinations
+## What is implemented
 
-Generates real-time safety alerts
+- Animated entry/boot screen with a canvas particle background.
+- Class, subject, and language selection.
+- English, Hindi, Telugu, and Tamil UI strings on the dashboard.
+- Browser-local preference persistence through `localStorage`.
+- A dashboard that selects the available class/subject modules.
+- Standalone interactive pages for friction, refraction, Ohm's law, logic gates, atomic structure, and titration.
+- Safety acknowledgement panels within the simulation pages.
 
-Teaches lab safety principles
+## Important: prototype boundaries
 
-✨ Unique Selling Point (USP)
+AstraLab is an educational UI and simulation prototype—not an AI engine or a validated laboratory platform.
 
-A virtual lab that thinks before you mix — predicting and preventing unsafe reactions in real time.
+- The entry form is a visual gate only. The inspected code accepts any non-empty form input and transitions to the next panel; it does not authenticate a researcher or validate credentials.
+- Class, subject, and language preferences are saved in browser `localStorage`; there is no user database or server-side account system.
+- The inspected project uses browser-side JavaScript. No AI model, remote reasoning service, chemical hazard database, or backend API is configured.
+- Simulation results are illustrative learning models. They are not calibrated scientific instruments and should not be used to determine real laboratory safety.
+- Tailwind CSS is loaded from its CDN; the titration page also loads Chart.js from a CDN.
 
-🛠️ Features
+## Run locally
 
-🔬 Interactive experiment simulation
+The project uses standalone HTML pages. Open `index.html` in a modern browser, or serve the repository over HTTP:
 
-🤖 AI-powered lab assistant
+```bash
+python -m http.server 8000
+```
 
-⚠️ Real-time hazard detection system
+Then open [http://localhost:8000](http://localhost:8000).
 
-📚 Chemical safety database
+## Repository structure
 
-💬 Chat-based guidance and explanations
+```text
+AstraLab/
+├── index.html          # Entry and preference flow
+├── dashboard.html      # Module selection dashboard
+├── friction.html       # Friction simulation
+├── optics.html         # Snell's law simulation
+├── ohms_law.html       # Electrical circuit simulation
+├── logic.html          # Digital logic gates
+├── atomic.html         # Atomic structure model
+└── titration.html      # Acid/base titration visualisation
+```
 
-🏗️ Tech Stack
+## Evidence status
 
-Frontend: (React / HTML / CSS / etc.)
+No independently validated scientific accuracy, learning-outcome, safety, performance, or benchmark results are published in this repository.
 
-Backend: (Node.js / Python / etc.)
-
-AI Logic Engine: Rule-based + AI model
-
-Database: Chemical properties & hazard rules
-
-(Edit this section according to what you used.)
-
-📊 How It Works
-
-User selects an experiment.
-
-Assistant explains the procedure step-by-step.
-
-User selects chemicals or actions.
-
-AI engine analyzes combinations.
-
-System blocks unsafe reactions and provides warnings.
-
-🎓 Target Users
-
-School students
-
-Science teachers
-
-Educational institutions
-
-Remote learners
-
-🔮 Future Scope
-
-Integration with AR/VR for immersive labs
-
-Machine learning-based reaction prediction
-
-Multi-subject expansion (Physics, Biology)
-
-Performance analytics for students
-
-🤝 Contribution
-
-Contributions are welcome! Feel free to fork the repository and submit pull requests.
-
-📜 License
-
-This project is developed for educational and research purposes.
+[Browse the source](https://github.com/MokuLakshithReddy/AstraLab)
