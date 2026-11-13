@@ -1,5 +1,8 @@
 # AstraLab — Interactive Science Learning Modules
 
+[![Forks](https://img.shields.io/github/forks/MokuLakshithReddy/AstraLab?style=flat-square)](https://github.com/MokuLakshithReddy/AstraLab/forks) [![Open Issues](https://img.shields.io/github/issues/MokuLakshithReddy/AstraLab?style=flat-square)](https://github.com/MokuLakshithReddy/AstraLab/issues)
+
+
 A browser-based collection of interactive science and classroom learning pages. The repository is built from standalone HTML modules, with a shared cyber-terminal visual style and a dashboard that links learners to individual simulations.
 
 [![HTML](https://img.shields.io/badge/HTML-5-E34F26?logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
