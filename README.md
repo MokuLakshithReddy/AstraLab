@@ -2,11 +2,12 @@
 
 AstraLab is a browser-based collection of stylized STEM learning simulations. It provides a sci-fi themed entry screen, class/subject/language selection, and standalone modules for introductory physics and chemistry concepts.
 
-![GitHub stars](https://img.shields.io/github/stars/MokuLakshithReddy/AstraLab?style=flat-square&label=stars)
-![GitHub forks](https://img.shields.io/github/forks/MokuLakshithReddy/AstraLab?style=flat-square&label=forks)
-![Open issues](https://img.shields.io/github/issues/MokuLakshithReddy/AstraLab?style=flat-square&label=open%20issues)
-![Last commit](https://img.shields.io/github/last-commit/MokuLakshithReddy/AstraLab?style=flat-square)
-![Stack](https://img.shields.io/badge/Stack-HTML%20%7C%20CSS%20%7C%20JavaScript-f1e05a?style=flat-square)
+[![Stars](https://img.shields.io/github/stars/MokuLakshithReddy/AstraLab?style=flat-square)](https://github.com/MokuLakshithReddy/AstraLab/stargazers)
+[![Forks](https://img.shields.io/github/forks/MokuLakshithReddy/AstraLab?style=flat-square)](https://github.com/MokuLakshithReddy/AstraLab/forks)
+[![Open Issues](https://img.shields.io/github/issues/MokuLakshithReddy/AstraLab?style=flat-square)](https://github.com/MokuLakshithReddy/AstraLab/issues)
+[![Last Commit](https://img.shields.io/github/last-commit/MokuLakshithReddy/AstraLab?style=flat-square)](https://github.com/MokuLakshithReddy/AstraLab/commits/main)
+[![Stack](https://img.shields.io/badge/Stack-HTML%20%7C%20CSS%20%7C%20JavaScript-f1e05a?style=flat-square)](https://developer.mozilla.org/en-US/docs/Web/HTML)
+[![Tailwind CSS](https://img.shields.io/badge/Styling-Tailwind%20CDN-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
 ## Why it matters
 
